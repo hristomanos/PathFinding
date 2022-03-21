@@ -4,17 +4,12 @@ using UnityEngine;
 
 public class PathTester : MonoBehaviour
 {
-    public Pathfinding _pathfinding;
-    public MapGenerator _mapGenerator;
-    public GameObject _playerAgentPrefab;
 
-    private Tile _startTile;
-    private Tile _endTile;
-    private Agent _agent;
+    private Tile m_StartTile;
+    private Tile m_EndTile;
 
-    private void Start()
-    {
-    }
+    public Pathfinding m_Pathfinding;
+    public MapGenerator m_MapGenerator;
 
     private void Update()
     {
@@ -23,20 +18,20 @@ public class PathTester : MonoBehaviour
 
     private void CalculatePath(Tile start, Tile end)
     {
-        Queue<Tile> path = _pathfinding.FindPath(_startTile, _endTile);
+        Queue<Tile> path = m_Pathfinding.FindPath(m_StartTile, m_EndTile);
         if (path == null)
             Debug.LogWarning("Goal not reachable");
         else
         {
             foreach (Tile t in path)
             {
-                t._Color = new Color(1, 0.6f, 0);
+                t.g_Color = new Color(1, 0.6f, 0);
             }
 
-            _endTile._Color = Color.red;
-            _endTile._Text = "End";
-            _startTile._Color = Color.cyan;
-            _startTile._Text = "Start";
+            m_EndTile.g_Color = Color.red;
+            m_EndTile.g_Text = "End";
+            m_StartTile.g_Color = Color.cyan;
+            m_StartTile.g_Text = "Start";
         }
     }
 
@@ -54,7 +49,7 @@ public class PathTester : MonoBehaviour
 
             if (tileUnderMouse != null)
             {
-                _startTile = tileUnderMouse;
+                m_StartTile = tileUnderMouse;
             }
 
             RepaintMap();
@@ -71,7 +66,7 @@ public class PathTester : MonoBehaviour
 
             if (tileUnderMouse != null)
             {
-                _endTile = tileUnderMouse;
+                m_EndTile = tileUnderMouse;
             }
             RepaintMap();
         }
@@ -103,27 +98,6 @@ public class PathTester : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            foreach (Tile t in _mapGenerator.grid)
-            {
-                t._Text = t._X + ", " + t._Y;
-            }
-        }
-
-        if (Input.GetKeyUp(KeyCode.Space))
-            RepaintMap();
-
-        if(Input.GetKeyDown(KeyCode.F))
-        {
-            if (_agent == null)
-                _agent = Instantiate(_playerAgentPrefab, _startTile.transform.position, Quaternion.identity).GetComponent<Agent>();
-            else
-                _agent.transform.position = _startTile.transform.position;
-
-            Queue<Tile> path = _pathfinding.FindPath(_startTile, _endTile);
-            _agent.SetPath(path);
-        }
     }
 
     private Tile GetTileUnderMouse()
@@ -144,24 +118,24 @@ public class PathTester : MonoBehaviour
 
     public void RepaintMap()
     {
-        _mapGenerator.ResetTiles();
-        if (_endTile != null)
+        m_MapGenerator.ResetTiles();
+        if (m_EndTile != null)
         {
-            _endTile._Color = Color.red;
-            _endTile._Text = "End";
+            m_EndTile.g_Color = Color.red;
+            m_EndTile.g_Text = "End";
         }
 
-        if (_startTile != null)
+        if (m_StartTile != null)
         {
-            _startTile._Color = Color.green;
-            _startTile._Text = "Start";
+            m_StartTile.g_Color = Color.green;
+            m_StartTile.g_Text = "Start";
         }
 
 
 
-        if (_startTile != null && _endTile != null)
+        if (m_StartTile != null && m_EndTile != null)
         {
-            CalculatePath(_startTile, _endTile);
+            CalculatePath(m_StartTile, m_EndTile);
         }
     }
 }

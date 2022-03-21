@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public GameObject _tilePrefab;
+    public GameObject g_TilePrefab;
     public int sizeX = 20;
     public int sizeY = 20;
 
-    public Tile[,] grid;
+    public Tile[,] g_Grid;
 
 
     private Dictionary<Tile, Tile[]> neighborDictionary;
@@ -19,7 +19,7 @@ public class MapGenerator : MonoBehaviour
 
     void Awake()
     {
-        grid = new Tile[sizeX, sizeY];
+        g_Grid = new Tile[sizeX, sizeY];
         neighborDictionary = new Dictionary<Tile, Tile[]>();
         GenerateMap(sizeX, sizeY);
     }
@@ -32,8 +32,8 @@ public class MapGenerator : MonoBehaviour
         {
             for (int x = 0; x < sizeX; x++)
             {
-                grid[x, y] = Instantiate(_tilePrefab, new Vector3(x, y, 0), Quaternion.identity).GetComponent<Tile>();
-                grid[x, y].Init(x, y);
+                g_Grid[x, y] = Instantiate(g_TilePrefab, new Vector3(x, y, 0), Quaternion.identity).GetComponent<Tile>();
+                g_Grid[x, y].Init(x, y);
             }
         }
 
@@ -44,36 +44,36 @@ public class MapGenerator : MonoBehaviour
             {
                 List<Tile> neighbors = new List<Tile>();
                 if (y < sizeY-1)
-                    neighbors.Add(grid[x, y + 1]);
+                    neighbors.Add(g_Grid[x, y + 1]);
                 if (x < sizeX-1)
-                    neighbors.Add(grid[x + 1, y]);
+                    neighbors.Add(g_Grid[x + 1, y]);
                 if (y > 0)
-                    neighbors.Add(grid[x, y - 1]);
+                    neighbors.Add(g_Grid[x, y - 1]);
                 if (x > 0)
-                    neighbors.Add(grid[x - 1, y]);
+                    neighbors.Add(g_Grid[x - 1, y]);
 
-                neighborDictionary.Add(grid[x, y], neighbors.ToArray());
+                neighborDictionary.Add(g_Grid[x, y], neighbors.ToArray());
             }
         }
     }
 
     public void ResetTiles()
     {
-        foreach(Tile t in grid)
+        foreach(Tile t in g_Grid)
         {
-            t._Color = Color.white;
-            t._Text = "";
+            t.g_Color = Color.white;
+            t.g_Text = "";
 
             switch (t._TileType)
             {
                 case Tile.TileType.Plains:
-                    t._Color = Color.white;
+                    t.g_Color = Color.white;
                     break;
                 case Tile.TileType.Wall:
-                    t._Color = Color.gray;
+                    t.g_Color = Color.gray;
                     break;
                 case Tile.TileType.Wood:
-                    t._Color = Color.green;
+                    t.g_Color = Color.green;
                     break;
             }
 

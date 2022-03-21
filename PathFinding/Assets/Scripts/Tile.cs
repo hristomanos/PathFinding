@@ -17,18 +17,18 @@ public class Tile : MonoBehaviour
    // public GameObject _wallGO;
     
 
-    private TextMeshProUGUI _text;
+    private TextMeshProUGUI m_Text;
     private TileType g_TileType;
 
-    private SpriteRenderer _renderer;
+    private SpriteRenderer m_Renderer;
     private int _x;
     private int _y;
 
 
     void Awake()
     {
-        _text = GetComponentInChildren<TextMeshProUGUI>();
-        _renderer = GetComponent<SpriteRenderer>();
+        m_Text = GetComponentInChildren<TextMeshProUGUI>();
+        m_Renderer = GetComponent<SpriteRenderer>();
     }
 
     public void Init(int x, int y)
@@ -38,8 +38,8 @@ public class Tile : MonoBehaviour
         name = "Tile_" + x + "_" + y;
     }
 
-    public Color _Color { get => _renderer.material.color; set => _renderer.material.color = value; }
-    public string _Text { get => _text.text; set => _text.text = value; }
+    public Color g_Color { get => m_Renderer.material.color; set => m_Renderer.material.color = value; }
+    public string g_Text { get => m_Text.text; set => m_Text.text = value; }
     public TileType _TileType
     {
         get => g_TileType;
@@ -49,19 +49,20 @@ public class Tile : MonoBehaviour
             switch (g_TileType)
             {
                 case TileType.Plains:
-                    _renderer.material.color = Color.white;
+                    m_Renderer.material.color = Color.white;
                     
                     break;
                 case TileType.Wall:
-                    _Color = Color.gray;
+                    g_Color = Color.gray;
                     break;
                 case TileType.Wood:
-                    _renderer.material.color = Color.green;
+                    m_Renderer.material.color = Color.green;
                     break;
             }
         }
     }
-    public int _Cost
+
+    public int g_Cost
     {
         get
         {
@@ -76,6 +77,7 @@ public class Tile : MonoBehaviour
             }
         }
     }
+
     public int _X => _x; 
     public int _Y => _y;
 }

@@ -3,18 +3,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//This script implements the flood fill, Dijkstra and A* algorithms
 public class Pathfinding : MonoBehaviour
 {
     private MapGenerator m_MapGenerator;
+
+    public enum Algorithm
+    {
+        FloodFill = 0,
+        Dijkstra = 1,
+        AStar = 2
+    }
+
+    public Algorithm m_CurrentAlgorithm;
 
     private void Awake()
     {
         m_MapGenerator = FindObjectOfType<MapGenerator>();
     }
 
-
-
-
+   
+    private void Start()
+    {
+        m_CurrentAlgorithm = Algorithm.Dijkstra;
+    }
 
     //Conduct Breadth first search
     Queue<Tile> FloodFill(Tile startTile, Tile goalTile)
@@ -32,13 +44,13 @@ public class Pathfinding : MonoBehaviour
         frontier.Enqueue(goalTile);
 
         //Repeat until frontier is empty
-        while(frontier.Count > 0)
+        while (frontier.Count > 0)
         {
             //Take from top most tile from the queue
             Tile currentTile = frontier.Dequeue();
 
             //Check for each neighbor
-            foreach(Tile neighbor in m_MapGenerator.Neighbors(currentTile))
+            foreach (Tile neighbor in m_MapGenerator.Neighbors(currentTile))
             {
                 //We have not visited before and is not frontier
                 if (reached.Contains(neighbor) == false && frontier.Contains(neighbor) == false)
@@ -68,7 +80,7 @@ public class Pathfinding : MonoBehaviour
         Tile curPathTile = startTile;
 
         //Fill the path Queue with tiles the player needs to follow to get to their destination
-        while(curPathTile != goalTile)
+        while (curPathTile != goalTile)
         {
             curPathTile = came_from[curPathTile];
             path.Enqueue(curPathTile);
@@ -80,44 +92,54 @@ public class Pathfinding : MonoBehaviour
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-    Queue<Tile> Dijkstra(Tile start, Tile goal)
+    Queue<Tile> Dijkstra(Tile startTile, Tile goalTile)
     {
-        Dictionary<Tile, Tile> NextTileToGoal = new Dictionary<Tile, Tile>();//Determines for each tile where you need to go to reach the goal. Key=Tile, Value=Direction to Goal
-        Dictionary<Tile, int> costToReachTile = new Dictionary<Tile, int>();//Total Movement Cost to reach the tile
+        //Determines for each tile where the agent needs to go to reach the goal. Key=Tile, Value=Direction to Goal tile
+        Dictionary<Tile, Tile> came_from = new Dictionary<Tile, Tile>();
 
+        //Total Movement Cost to reach the tile
+        Dictionary<Tile, int> cost_so_far = new Dictionary<Tile, int>();
+
+        //Advanced frontier that prioritises amount of cost for each tile
         PriorityQueue<Tile> frontier = new PriorityQueue<Tile>();
-        frontier.Enqueue(goal, 0);
-        costToReachTile[goal] = 0;
 
+        //Starting goal tile costs 0 turns
+        frontier.Enqueue(goalTile, 0);
+
+        //Initilise cost to reach the next tile dictionary
+        cost_so_far[goalTile] = 0;
+
+        //Explore till frontier is empty
         while (frontier.Count > 0)
         {
+            //Starting with the smallest cost, in this case is always the goal.
             Tile curTile = frontier.Dequeue();
-            if (curTile == start)
+
+            //Stop if you reached the starting tile
+            if (curTile == startTile)
                 break;
 
+            //Check for each neighbour
             foreach (Tile neighbor in m_MapGenerator.Neighbors(curTile))
             {
-                int newCost = costToReachTile[curTile] + neighbor._Cost;
-                if (costToReachTile.ContainsKey(neighbor) == false || newCost < costToReachTile[neighbor])
+                //Save the cost to move towards the neighbor
+                int newCost = cost_so_far[curTile] + neighbor.g_Cost;
+
+                //Check if the neighbor has been added alread
+                //or if the new cost is less than the current cost to reach the tile
+                if (cost_so_far.ContainsKey(neighbor) == false || newCost < cost_so_far[neighbor])
                 {
+                    //Skip if it is a wall tile
                     if (neighbor._TileType != Tile.TileType.Wall)
                     {
-                        costToReachTile[neighbor] = newCost;
-                        int priority = newCost;
-                        frontier.Enqueue(neighbor, priority);
-                        NextTileToGoal[neighbor] = curTile;
-                        neighbor._Text = costToReachTile[neighbor].ToString();
+                        //Set the new cost to reach the neighbor
+                        cost_so_far[neighbor] = newCost;
+                        //Add the new cost of the neighbour to the frontier
+                        frontier.Enqueue(neighbor, newCost);
+                        came_from[neighbor] = curTile;
+
+                        //Displays the cost the agent needs to reach this destination
+                        neighbor.g_Text = cost_so_far[neighbor].ToString();
                     }
                 }
             }
@@ -126,48 +148,68 @@ public class Pathfinding : MonoBehaviour
         //Get the Path
 
         //check if tile is reachable
-        if (NextTileToGoal.ContainsKey(start) == false)
+        if (came_from.ContainsKey(startTile) == false)
         {
             return null;
         }
 
         Queue<Tile> path = new Queue<Tile>();
-        Tile pathTile = start;
-        while (goal != pathTile)
+        Tile pathTile = startTile;
+        while (goalTile != pathTile)
         {
-            pathTile = NextTileToGoal[pathTile];
+            pathTile = came_from[pathTile];
             path.Enqueue(pathTile);
         }
         return path;
     }
 
-    Queue<Tile> AStar(Tile start, Tile goal)
+    Queue<Tile> AStar(Tile startTile, Tile goalTile)
     {
-        Dictionary<Tile, Tile> NextTileToGoal = new Dictionary<Tile, Tile>();//Determines for each tile where you need to go to reach the goal. Key=Tile, Value=Direction to Goal
-        Dictionary<Tile, int> costToReachTile = new Dictionary<Tile, int>();//Total Movement Cost to reach the tile
+        //Determines for each tile where you need to go to reach the goal. Key=Tile, Value=Direction to Goal
+        Dictionary<Tile, Tile> came_from = new Dictionary<Tile, Tile>();
 
+        //Total Movement Cost to reach the tile
+        Dictionary<Tile, int> cost_so_far = new Dictionary<Tile, int>();
+
+        //Advanced frontier that prioritises amount of cost for each tile
         PriorityQueue<Tile> frontier = new PriorityQueue<Tile>();
-        frontier.Enqueue(goal, 0);
-        costToReachTile[goal] = 0;
 
+
+        //Initilise cost to reach the next tile dictionary
+        frontier.Enqueue(goalTile, 0);
+        cost_so_far[goalTile] = 0;
+
+        //Check till frontier is empty
         while (frontier.Count > 0)
         {
+            //Starting with the smallest cost, in this case is always the goal
             Tile curTile = frontier.Dequeue();
-            if (curTile == start)
+
+            //To take full advantage of A*, if the 
+            if (curTile == startTile)
                 break;
 
             foreach (Tile neighbor in m_MapGenerator.Neighbors(curTile))
             {
-                int newCost = costToReachTile[curTile] + neighbor._Cost;
-                if (costToReachTile.ContainsKey(neighbor) == false || newCost < costToReachTile[neighbor])
+                //Save the cost to move towards the neighbor
+                int newCost = cost_so_far[curTile] + neighbor.g_Cost;
+
+                //Check if the neighbor has been added alread or if the new cost is less than the current cost to reach the tile
+                if (cost_so_far.ContainsKey(neighbor) == false || newCost < cost_so_far[neighbor])
                 {
+                    //Skip if it is a wall tile
                     if (neighbor._TileType != Tile.TileType.Wall)
                     {
-                        costToReachTile[neighbor] = newCost;
-                        int priority = newCost + Distance(neighbor, start);
+                        //Set the new cost to reach the neighbor
+                        cost_so_far[neighbor] = newCost;
+
+                        //A*, it will not compute tiles that are beyond the cheapest path
+                        int priority = newCost + Distance(neighbor, startTile); 
+
+                        //Add the new cost of the neighbour to the frontier
                         frontier.Enqueue(neighbor, priority);
-                        NextTileToGoal[neighbor] = curTile;
-                        neighbor._Text = costToReachTile[neighbor].ToString();
+                        came_from[neighbor] = curTile;
+                        neighbor.g_Text = cost_so_far[neighbor].ToString();
                     }
                 }
             }
@@ -176,28 +218,24 @@ public class Pathfinding : MonoBehaviour
         //Get the Path
 
         //check if tile is reachable
-        if (NextTileToGoal.ContainsKey(start) == false)
+        if (came_from.ContainsKey(startTile) == false)
         {
             return null;
         }
 
         Queue<Tile> path = new Queue<Tile>();
-        Tile pathTile = start;
-        while (goal != pathTile)
+        Tile pathTile = startTile;
+        while (goalTile != pathTile)
         {
-            pathTile = NextTileToGoal[pathTile];
+            pathTile = came_from[pathTile];
             path.Enqueue(pathTile);
         }
         return path;
     }
 
-    /// <summary>
-    /// Finds a path from starttile to endtile
-    /// </summary>
-    /// <returns>Returns a Queue which contains the Tiles, the player must move.</returns>
     public Queue<Tile> FindPath(Tile start, Tile end)
     {
-        switch (_currentAlgorithm)
+        switch (m_CurrentAlgorithm)
         {
             case Algorithm.FloodFill:
                 return FloodFill(start, end);
@@ -212,58 +250,12 @@ public class Pathfinding : MonoBehaviour
     }
 
 
-
-
-
-
-
-    /// <summary>
-    /// Determines the Manhatten Distance between two tiles. (=How many Tiles the player must move to reach it)
-    /// </summary>
-    /// <returns>Distance in amount of Tiles the player must move</returns>
+    //Manhattan distance, Determines the amount of blocks between two tiles. (= How many Tiles the player must move to reach it)
     int Distance(Tile t1, Tile t2)
     {
         return Mathf.Abs(t1._X - t2._X) + Mathf.Abs(t1._Y - t2._Y);
     }
 
+   
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #region unimportant
-    public enum Algorithm
-    {
-        FloodFill = 0,
-        Dijkstra = 1,
-        AStar = 2
-    }
-
-    public Algorithm _currentAlgorithm;
-    private void Start()
-    {
-        _currentAlgorithm = Algorithm.Dijkstra;
-       // TMPro.TMP_Dropdown dropDown = FindObjectOfType<TMPro.TMP_Dropdown>();
-        //dropDown.onValueChanged.AddListener(OnAlgorithmChanged);
-        //dropDown.value = PlayerPrefs.GetInt("currentAlgorithm");
-    }
-
-
-    public void OnAlgorithmChanged(int algorithmID)
-    {
-        _currentAlgorithm = (Algorithm)algorithmID;
-        FindObjectOfType<PathTester>().RepaintMap();
-        PlayerPrefs.SetInt("currentAlgorithm", (int)algorithmID);
-        PlayerPrefs.Save();
-    }
-    #endregion
 }
