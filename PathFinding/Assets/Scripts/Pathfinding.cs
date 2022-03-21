@@ -5,55 +5,76 @@ using UnityEngine;
 
 public class Pathfinding : MonoBehaviour
 {
-    private MapGenerator _mapGenerator;
+    private MapGenerator m_MapGenerator;
 
     private void Awake()
     {
-        _mapGenerator = FindObjectOfType<MapGenerator>();
+        m_MapGenerator = FindObjectOfType<MapGenerator>();
     }
 
 
 
 
 
-
-    Queue<Tile> FloodFill(Tile start, Tile goal)
+    //Conduct Breadth first search
+    Queue<Tile> FloodFill(Tile startTile, Tile goalTile)
     {
-        Dictionary<Tile, Tile> nextTileToGoal = new Dictionary<Tile, Tile>();
+        //Stores the tile that points towards the destination
+        Dictionary<Tile, Tile> came_from = new Dictionary<Tile, Tile>();
+
+        //A Queue where neighbour tiles are stored
         Queue<Tile> frontier = new Queue<Tile>();
-        List<Tile> visited = new List<Tile>();
 
-        frontier.Enqueue(goal);
+        //A list of visited tiles
+        List<Tile> reached = new List<Tile>();
 
+        //Add to the queue starting from the goal node
+        frontier.Enqueue(goalTile);
+
+        //Repeat until frontier is empty
         while(frontier.Count > 0)
         {
-            Tile curTile = frontier.Dequeue();
+            //Take from top most tile from the queue
+            Tile currentTile = frontier.Dequeue();
 
-            foreach(Tile neighbor in _mapGenerator.Neighbors(curTile))
+            //Check for each neighbor
+            foreach(Tile neighbor in m_MapGenerator.Neighbors(currentTile))
             {
-                if (visited.Contains(neighbor) == false && frontier.Contains(neighbor) == false)
+                //We have not visited before and is not frontier
+                if (reached.Contains(neighbor) == false && frontier.Contains(neighbor) == false)
                 {
+                    //Skip if wall
                     if (neighbor._TileType != Tile.TileType.Wall)
                     {
+                        //Add neighbor to the queue
                         frontier.Enqueue(neighbor);
-                        nextTileToGoal[neighbor] = curTile;
+
+                        //Set current tile 
+                        came_from[neighbor] = currentTile;
                     }
                 }
             }
-            visited.Add(curTile);
+            //Add tile to list of visited 
+            reached.Add(currentTile);
         }
 
-        if (visited.Contains(start) == false)
+        if (reached.Contains(startTile) == false)
             return null;
 
+        //The path the player will follow
         Queue<Tile> path = new Queue<Tile>();
-        Tile curPathTile = start;
-        while(curPathTile != goal)
+
+        //The tile where the player is currently standing
+        Tile curPathTile = startTile;
+
+        //Fill the path Queue with tiles the player needs to follow to get to their destination
+        while(curPathTile != goalTile)
         {
-            curPathTile = nextTileToGoal[curPathTile];
+            curPathTile = came_from[curPathTile];
             path.Enqueue(curPathTile);
         }
 
+        //Return path that was just created
         return path;
     }
 
@@ -85,7 +106,7 @@ public class Pathfinding : MonoBehaviour
             if (curTile == start)
                 break;
 
-            foreach (Tile neighbor in _mapGenerator.Neighbors(curTile))
+            foreach (Tile neighbor in m_MapGenerator.Neighbors(curTile))
             {
                 int newCost = costToReachTile[curTile] + neighbor._Cost;
                 if (costToReachTile.ContainsKey(neighbor) == false || newCost < costToReachTile[neighbor])
@@ -135,7 +156,7 @@ public class Pathfinding : MonoBehaviour
             if (curTile == start)
                 break;
 
-            foreach (Tile neighbor in _mapGenerator.Neighbors(curTile))
+            foreach (Tile neighbor in m_MapGenerator.Neighbors(curTile))
             {
                 int newCost = costToReachTile[curTile] + neighbor._Cost;
                 if (costToReachTile.ContainsKey(neighbor) == false || newCost < costToReachTile[neighbor])

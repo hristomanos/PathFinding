@@ -18,7 +18,7 @@ public class Tile : MonoBehaviour
     
 
     private TextMeshProUGUI _text;
-    private TileType _tileType;
+    private TileType g_TileType;
 
     private SpriteRenderer _renderer;
     private int _x;
@@ -42,16 +42,15 @@ public class Tile : MonoBehaviour
     public string _Text { get => _text.text; set => _text.text = value; }
     public TileType _TileType
     {
-        get => _tileType;
+        get => g_TileType;
         set
         {
-            _tileType = value;
-            switch (_tileType)
+            g_TileType = value;
+            switch (g_TileType)
             {
                 case TileType.Plains:
                     _renderer.material.color = Color.white;
-                    //_woodGO.SetActive(false);
-                    //_wallGO.SetActive(false);
+                    
                     break;
                 case TileType.Wall:
                     _Color = Color.gray;
@@ -66,7 +65,7 @@ public class Tile : MonoBehaviour
     {
         get
         {
-            switch (_tileType)
+            switch (g_TileType)
             {
                 case TileType.Plains:
                     return 1;
